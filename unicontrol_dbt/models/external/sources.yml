@@ -1,0 +1,57 @@
+
+version: 2
+
+sources:
+  - name: ext
+    database: unicontrol-data-project
+    schema: external
+
+    tables:
+      - name: distributors
+        external:
+          location: "gs://unicontrol-raw-data-lake/crm/distributors/snapshot_month=*"
+          options:
+            format: NEWLINE_DELIMITED_JSON
+            hive_partition_uri_prefix: 'gs://unicontrol-raw-data-lake/crm/distributors/'
+                     
+ 
+
+      - name: subscription_invoices
+        external:
+          location: "gs://unicontrol-raw-data-lake/erp/invoices/subscription/month=*"
+          options:
+            format: NEWLINE_DELIMITED_JSON
+            hive_partition_uri_prefix: "gs://unicontrol-raw-data-lake/erp/invoices/subscription/"
+            
+            
+
+      - name: telemetry_machine
+        external:
+          location: "gs://unicontrol-raw-data-lake/telemetry/machine_events/year=*"
+          options:
+            format: NEWLINE_DELIMITED_JSON
+            hive_partition_uri_prefix: "gs://unicontrol-raw-data-lake/telemetry/machine_events/"
+            
+        
+
+      - name: subscription_events
+        external:
+          location: "gs://unicontrol-raw-data-lake/billing/subscription/events/month=*"
+          options:
+            format: NEWLINE_DELIMITED_JSON
+            hive_partition_uri_prefix: "gs://unicontrol-raw-data-lake/billing/subscription/events/"
+
+      - name: subscription_terms
+        external:
+          location: "gs://unicontrol-raw-data-lake/billing/subscription/terms/month=*"
+          options:
+            format: NEWLINE_DELIMITED_JSON
+            hive_partition_uri_prefix: "gs://unicontrol-raw-data-lake/billing/subscription/terms/"
+          
+
+      - name: sell_out
+        external:
+          location: "gs://unicontrol-raw-data-lake/distributor_api/sales_orders/month=*"
+          options:
+            format: NEWLINE_DELIMITED_JSON
+            hive_partition_uri_prefix: "gs://unicontrol-raw-data-lake/distributor_api/sales_orders/"
