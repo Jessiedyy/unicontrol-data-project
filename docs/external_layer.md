@@ -48,6 +48,7 @@ External table definitions are version-controlled via dbt source configurations.
 
 #### Example Configuration:
 
+```
 version: 2
 
 sources:
@@ -62,23 +63,27 @@ sources:
           options:
             format: NEWLINE_DELIMITED_JSON
             hive_partition_uri_prefix: "gs://unicontrol-raw-data-lake/crm/distributors/"  
-        
+   ```     
 
 ### Install dbt External Tables Package
 
 The dbt_external_tables package is used to generate external table DDL automatically:
 
+```
 packages:
   - package: dbt-labs/dbt_external_tables
     version: latest
-
+```
+```
 dbt deps   
-
+```
 ### Generate External Tables
 
 External tables are programmatically materialized using the dbt_external_tables macro:
 
+```
 dbt run-operation stage_external_sources --vars "ext_full_refresh: true" 
+```
 
 This macro generates DDL from source definitions and provisions the external tables in BigQuery.
 
@@ -89,10 +94,11 @@ Table accessibility is validated through partition-filtered queries:
 
 e.g.,
 
+```
 SELECT * 
 FROM external.distributors
 where snapshot_month = '2021-01';
-
+```
 ---
 
 ## Results: External Tables
@@ -115,16 +121,20 @@ This design ensures reproducibility — the entire external layer can be rebuilt
 ### BigQuery supports only one wildcard per URI.
 
 #### Incorrect
+```
 snapshot_month=*/*
-
+```
 #### Correct
+```
 snapshot_month=*
-
+```
 ### Hive partitioning requires correct folder structure (key=value style)
 
 Partition detection works only when GCS follows:
+```
 snapshot_month=202401/
 snapshot_month=202402/
+```
 
 Otherwise, partitions will not be recognized.
 
