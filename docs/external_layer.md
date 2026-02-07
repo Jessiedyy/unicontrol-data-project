@@ -2,7 +2,7 @@
 
 ## Overview
 
-This layer is to create a seamless, automated connection between raw data stored in Google Cloud Storage (GCS) and BigQuery, without physically moving the data (Zero-copy ingestion) by creating **external tables** in BigQuery using **dbt**.
+This layer establishes a zero-copy integration between Google Cloud Storage (GCS) and BigQuery by provisioning external tables via dbt.
 
 Instead of manually creating tables in the BigQuery UI, infrastructure is defined as code to ensure:
 - Automation: Avoids manual CREATE EXTERNAL TABLE SQL statements.
@@ -11,13 +11,15 @@ Instead of manually creating tables in the BigQuery UI, infrastructure is define
 
 This layer serves as the **entry point of the data platform**, forming the foundation for downstream Bronze, Silver, and Gold transformations.
 
+Environment setup steps are intentionally omitted to focus on production-level design rather than local tooling.
+
 ---
 
 ## Architecture Decision
 
 ### Why External Tables?
 
-External tables were selected instead of loading raw data into BigQuery to optimize cost and flexibility during early-stage data exploration.
+External tables were selected as the raw access layer to enable immediate queryability without introducing ingestion latency.
 
 ### Tradeoffs
 
@@ -33,52 +35,16 @@ External tables are used for the **raw ingestion layer**, allowing fast setup wh
 
 ---
 
-## Implementation Steps
+## External Tables Provisioning
 
 ---
 
-### Step 1  Configure dbt Environment
-
-#### Why
-dbt requires an isolated Python environment to prevent dependency conflicts.
-
-#### Command
-
-python3 -m venv dbt-env
-source dbt-env/bin/activate
-pip install dbt-bigquery
-dbt --version
-
-### Step 2  Authenticate and Connect to BigQuery
-
-#### Why
-dbt must authenticate using a service account or application default credentials to execute DDL operations.
-
-#### Command
-(upload the key of service account in advance)
-
-dbt debug
-
-(Expected: All checks passed!)
-
-### Step 3  Create ***External*** Dataset in BigQuery
-
-#### Why
-External tables must reside inside a dataset before creation.
-
-#### Command
-
-bq mk --dataset unicontrol-data-project:external
-
-### Step 4  Declare External Tables as Code
+### External Tables as Code
 
 All table definitions are stored in: ***models/external/sources.yml***
 
-This approach enforces Infrastructure as Code, eliminating manual UI operations.
+External table definitions are version-controlled via dbt source configurations.
 
-#### Command
-
-nano models/external/sources.yml  # edit ***sources.yml***
 
 #### Example Configuration:
 
@@ -86,58 +52,51 @@ version: 2
 
 sources:
   - name: ext
-    database: unicontrol-data-project  # project id in BigQuery
-    schema: external  # dataset name created in BigQuery
+    database: unicontrol-data-project  
+    schema: external  
 
     tables:
-      - name: distributors  # name of the external table in ***external*** dataset in BigQuery
+      - name: distributors  
         external:
-          location: "gs://unicontrol-raw-data-lake/crm/distributors/snapshot_month=*"  # only 1 wildcard can be in the ***location***  
+          location: "gs://unicontrol-raw-data-lake/crm/distributors/snapshot_month=*"  
           options:
             format: NEWLINE_DELIMITED_JSON
-            hive_partition_uri_prefix: "gs://unicontrol-raw-data-lake/crm/distributors/"  # "/" at then end is must 
+            hive_partition_uri_prefix: "gs://unicontrol-raw-data-lake/crm/distributors/"  
         
 
-### Step 5 Install dbt External Tables Package
+### Install dbt External Tables Package
 
-### Why
-dbt itself doesn't have macros to create external tables. The external plugin ***dbt_external_tables*** must be installed.
-
-#### Command
-nano packages.yml    # edit ***packages.yml***
+The dbt_external_tables package is used to generate external table DDL automatically:
 
 packages:
   - package: dbt-labs/dbt_external_tables
     version: latest
 
-dbt deps   # install external plugin ***dbt_external_tables*** 
+dbt deps   
 
-### Step 6  Generate External Tables
+### Generate External Tables
 
-#### Command
+External tables are programmatically materialized using the dbt_external_tables macro:
 
-dbt run-operation stage_external_sources --vars "ext_full_refresh: true"   
+dbt run-operation stage_external_sources --vars "ext_full_refresh: true" 
 
-This command instructs dbt to:
+This macro generates DDL from source definitions and provisions the external tables in BigQuery.
 
-- Read the YAML definitions (***models/external/sources.yml***)
-- Generate DDL
-- Create external tables in BigQuery
 
-### Step 7  Validate Table Creation
+### Validate Table Creation
 
-#### Command
+Table accessibility is validated through partition-filtered queries:
 
-bq ls unicontrol-data-project:external    # list tables
+e.g.,
 
-Example validation sql query in Bigquery:
 SELECT * 
 FROM external.distributors
 where snapshot_month = '2021-01';
 
 ---
 
-## External Tables Created
+## Results: External Tables
+
 - distributors
 - subscription_invoices
 - telemetry_machine
@@ -145,12 +104,15 @@ where snapshot_month = '2021-01';
 - subscription_terms
 - sell_out
 
+All external tables are defined declaratively and can be recreated at any time from version-controlled configurations.
+
+This design ensures reproducibility — the entire external layer can be rebuilt from code without manual intervention.
+
 ---
 
-## Technical Challenges & Optimization
+## Production Constraints
 
-### Multiple wildcards not supported in GCS URI
-BigQuery supports only one wildcard per URI.
+### BigQuery supports only one wildcard per URI.
 
 #### Incorrect
 snapshot_month=*/*
@@ -168,15 +130,13 @@ Otherwise, partitions will not be recognized.
 
 ---
 
-## Next Step : Build Bronze Layer
+## Data Flow
 
-- ***Completed*** External Table Layer
+```
+Source Systems -> API Ingestion -> GCS Raw Storage -> BigQuery External Tables -> Bronze -> Silver -> Gold
+```
+## Next Step: Build Bronze Layer
 
-- ### ***Next Step*** Bronze Layer 
-
-- *** Planned *** Silver Layer
-
-- *** Planned *** Gold Layer
  
 
 
