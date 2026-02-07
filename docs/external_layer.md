@@ -11,6 +11,8 @@ Instead of manually creating tables in the BigQuery UI, infrastructure is define
 
 This layer serves as the **entry point of the data platform**, forming the foundation for downstream Bronze, Silver, and Gold transformations.
 
+This layer separates storage from compute, aligning with modern data platform architecture principles.
+
 Environment setup steps are intentionally omitted to focus on production-level design rather than local tooling.
 
 ---
@@ -35,7 +37,7 @@ External tables are used for the **raw ingestion layer**, allowing fast setup wh
 
 ---
 
-## External Tables Provisioning
+## External Layer Provisioning
 
 ---
 
@@ -132,8 +134,8 @@ snapshot_month=*
 
 Partition detection works only when GCS follows:
 ```
-snapshot_month= '2024-01'
-snapshot_month= '2024-02'
+snapshot_month= 2024-01/
+snapshot_month= 2024-02/
 ```
 
 Otherwise, partitions will not be recognized.
