@@ -1,0 +1,32 @@
+#如何使用VSCode来操作dbt和bigquery
+## 在vscode里连接dbt和bigquery
+创造完虚拟环境，按照完dbt后，要先把service account的key放到profiles.yml, 这个yml是要自己创建的，通常是在～/.dbt/profiles.yml
+SA的key通常放在project/.screts/key.json, .screts也是需要自己创建的，key.json可以改名
+创建dir command
+```
+mkdir -p path/dir_name
+```
+
+改名的command
+```
+mv path/file.json path/file_rename.json
+```
+
+profiles.yml的command （可参考https://docs.getdbt.com/docs/core/connect-data-platform/bigquery-setup）
+```
+unicontrol_dbt:  ###pitfalls：这个name要和dbt_project.yml里的name一致，不然就不行
+  target: dev  ##default
+  outputs:
+    dev:
+      type: bigquery
+      method: service-account
+      project: unicontrol-data-project
+      dataset: dbt_dev ##default
+      threads: 4
+      keyfile: /users/dongyingying/unicontrol-data-project/.secrets/unicontrol-sa.json
+      location: EU
+      timeout_seconds: 300
+```
+
+## 在vscode-explorer-选择项目根目录-点击需要的那层-右键-选择folder/file，就可以在vscode里进行操作了
+
