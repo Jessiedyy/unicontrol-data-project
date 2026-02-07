@@ -19,7 +19,7 @@ Environment setup steps are intentionally omitted to focus on production-level d
 
 ### Why External Tables?
 
-External tables were selected as the raw access layer to enable immediate queryability without introducing ingestion latency.
+External tables were selected as the raw access layer to enable immediate queryability while keeping storage in GCS and avoiding early ingestion costs.
 
 ### Tradeoffs
 
@@ -132,8 +132,8 @@ snapshot_month=*
 
 Partition detection works only when GCS follows:
 ```
-snapshot_month=202401/
-snapshot_month=202402/
+snapshot_month= '2024-01'
+snapshot_month= '2024-02'
 ```
 
 Otherwise, partitions will not be recognized.
