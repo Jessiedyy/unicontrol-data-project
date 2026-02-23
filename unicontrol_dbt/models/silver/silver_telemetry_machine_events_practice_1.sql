@@ -14,5 +14,7 @@ json_value(payload_raw, '$.offset_type') as payload_offset_type,
 json_value(payload_raw, '$.method') as payload_method,
 json_value(payload_raw, '$.point_type') as payload_point_type,
 _loaded_at_utc as bronze_loaded_at_utc,
-current_timestamp() as loaded_at_utc
+current_timestamp() as loaded_at_utc,
+coalesce(vin, 'not available') as vin,
+coalesce(project_id, 'not available') as project_id,
 from {{ ref('telemetry_machine_events_practice_1') }}

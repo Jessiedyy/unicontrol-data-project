@@ -1,0 +1,58 @@
+#distributor_api_sell_out_practice_1.sql: 
+
+-- 全量 load, 按 month 分区，加 _month / _loaded_at_utc / _source
+
+{{ config(
+    materialized = 'table',
+    schema = 'bronze',
+    partition_by = {'field' : '_month', 'data_type' : 'date', 'granularity' : 'month'}
+) }}
+
+select * except(month),
+date(concat(cast(month as string), '-01')) as _month,
+current_timestamp() as loaded_at_utc,
+'ext.sell_out' as _source
+from {{ source ('ext', 'sell_out') }}
+
+{# Pitfalls to avoid:
+1. 'config'和双括号之间要有space, ')' 后面也要有space
+2.'key' : 'value', 要加quote, 注意不是'=', 是冒号
+#}
+
+# model文件必须以.sql结尾, 在dbt run 时只需要model名,不需要.sql
+
+
+
+
+
+{{ config(
+    materialized = 'table',
+    schema = 'silver',
+    partition_by = { 'field' : '_month',
+                     'data_type' : 'date',
+                     'granularity' : 'month'}
+) }}
+# 1. { } 内的每个key:value都要quote
+# 2. data_type得有underscore, instead of 'data type' which is wrong
+
+
+
+
+
+select *, except(_loaded_at_utc),
+_loaded_at_utc as bronze_loaded_at_utc,
+current_timestamp() as _loaded_at_utc
+from {{ ref('distributor_api_sell_out_practice_1') }}
+# 1. ref()里的model name必须加quote,because ref()里必须是string type
+
+
+
+
+
+
+select column_name, data_type
+from `dbt_dev_silver.INFORMATION_SCHEMA.COLUMNS`
+where table_name= 'silver_subscription_invoice_practice_1'
+      and data_type = 'boolean'
+order by ordinal_position;
+# 1. how to check column and data type in sql 
