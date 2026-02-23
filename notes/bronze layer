@@ -1,0 +1,21 @@
+#distributor_api_sell_out_practice_1.sql: 
+
+-- 全量 load, 按 month 分区，加 _month / _loaded_at_utc / _source
+
+{{ config(
+    materialized = 'table',
+    schema = 'bronze',
+    partition_by = {'field' : '_month', 'data_type' : 'date', 'granularity' : 'month'}
+) }}
+
+select * except(month),
+date(concat(cast(month as string), '-01')) as _month,
+current_timestamp() as loaded_at_utc,
+'ext.sell_out' as _source
+from {{ source ('ext', 'sell_out') }}
+
+{# Pitfalls to avoid:
+1. 'config'和双括号之间要有space, ')' 后面也要有space
+2.'key' : 'value', 要加quote, 注意不是'=', 是冒号
+#}
+

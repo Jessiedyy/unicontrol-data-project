@@ -56,3 +56,36 @@ where table_name= 'silver_subscription_invoice_practice_1'
       and data_type = 'boolean'
 order by ordinal_position;
 # 1. how to check column and data type in sql 
+
+
+#Github 
+git status
+git add
+git commit -m "commit message"
+
+#origin is the remote repository
+git push origin branch_name # push to branch_name branch
+git push origin main # push to main branch
+git push origin main --force # push to main branch and force overwrite
+
+{{ config(
+    materialized = 'view',
+    schema = 'gold',
+    tags = ['gold', 'dimension']
+) }}
+
+select *
+except(bronze_loaded_at_utc, _loaded_at_utc, _source)
+from {{ ref('silver_crm_distributor_info_practice_1') }}
+where _snapshot_month = 
+(select max(_snapshot_month) from {{ ref('silver_crm_distributor_info_practice_1') }})
+# 1. Be aware of the last row of the syntax, how to write a view with the latest month data
+
+
+#packages.yml
+packages:
+  - package: dbt-labs/dbt_external_tables
+    version: 0.12.0
+  - package: dbt-labs/dbt_utils
+    version: 1.3.3
+# run dbt deps to install the packages
