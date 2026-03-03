@@ -11,7 +11,7 @@ loaded_at_utc as bronze_loaded_at_utc,
 current_timestamp() as loaded_at_utc
 from {{ ref('distributor_api_sell_out_practice_1') }} )
 
-select base.* except(raw, customer, dealer, product, country_name, country_code),
+select base.* except(raw, customer, dealer, product),
 trim(raw.notes)as raw_notes,
 trim(raw.discount_pct) as raw_discount_pct,
 trim(raw.dealer_payload_version) as raw_dealer_payload_version,
@@ -22,7 +22,7 @@ trim(customer.country_code) as customer_country_code,
 trim(customer.customer_name) as customer_customer_name,
 coalesce(trim(customer.vat), 'not available') as customer_vat,
 trim(customer.customer_external_id) as customer_customer_external_id,
-coalesce(dim_country.country_name, trim(dealer.country)) as dealer_country
+coalesce(dim_country.country_name, trim(dealer.country)) as dealer_country,
 dealer.onboard_date as dealer_onboard_date,
 trim(dealer.dealer_name) as dealer_dealer_name,
 trim(dealer.region) as dealer_region,
@@ -32,7 +32,7 @@ trim(product.currency) as product_currency,
 trim(product.product_type) as product_product_type
 from base
 left join {{ ref('dim_country') }} 
-on base.dealer_country = dim_country.country_code
+on base.dealer.country= dim_country.country_code
 
 
 
